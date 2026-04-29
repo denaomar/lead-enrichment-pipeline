@@ -1,5 +1,4 @@
 # Lead Enrichment Pipeline
-### Mockup Project
 **Author:** Dena Omar
 
 ---
