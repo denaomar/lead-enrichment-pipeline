@@ -1,0 +1,381 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"website_url\": \"website\",\n  \"company_name\": \"company_name\",\n  \"hubspot_id\" : \"id\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5b6b33f0-7de9-48c6-a955-8adc9b011c0b",
+      "name": "Extract Member Data"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-member-enrichment",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "056f2150-4d5d-4666-8d53-dcda9d9e36b5",
+      "name": "New Member Webhook",
+      "webhookId": "ae030ce7-615c-42ee-9f47-4f52f39fdbcd"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v1/scrape",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "={\n  \"url\": \"{{ $json.website_url }}\",\n  \"formats\": [\"markdown\"]\n}",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "92051323-f5d4-4129-8d70-b10c53889f20",
+      "name": "Scrape Website (Firecrawl)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LWNt6XHn3bm74Gau",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "79c69f8d-ba91-43c8-9ec8-0e21ca883d64",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "16924755-7968-457a-a2ee-e47b5cf609c4",
+              "leftValue": "={{ $json.data.markdown.length }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "7c788326-632a-46a7-a2ea-b6dfcdfd7a9b",
+      "name": "Scrape Successful?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.1,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a precise data extraction assistant. Return valid JSON only.\"\n    },\n    {\n      \"role\": \"user\", \n      \"content\": \"Extract company data from this website content. Return JSON with: company_name, business_type (one of: Agency, Coaching / Consulting, SaaS / Software, E-commerce, Professional Services, Education / Course, Local / Trade Services, Media / Content), industry (one of: Real Estate, Health & Wellness, Legal, Finance & Wealth, Home Services, Marketing & Lead Gen, Food & Hospitality, Fitness, Technology, Education, E-commerce / Retail, Business Operations), company_summary (one sentence max 25 words), confidence_score (High/Medium/Low).\\n\\nContent:\\n{{ $json.data.markdown.slice(0, 8000) }}\"\n    }\n  ]\n}",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        848,
+        -16
+      ],
+      "id": "7eefda1f-1951-4a03-8bf7-785e9b72138f",
+      "name": "Extract with LLM (scraped)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "r9JdvXc2Vm48xKot",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.1,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a precise data extraction assistant. Return valid JSON only.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"A website scrape failed for this URL: {{ $('Extract Member Data').item.json.website_url }}\\n\\nInfer the company data from the URL alone. Return JSON with: company_name, business_type (one of: Agency, Coaching / Consulting, SaaS / Software, E-commerce, Professional Services, Education / Course, Local / Trade Services, Media / Content), industry (one of: Real Estate, Health & Wellness, Legal, Finance & Wealth, Home Services, Marketing & Lead Gen, Food & Hospitality, Fitness, Technology, Education, E-commerce / Retail, Business Operations), company_summary (one sentence max 25 words), confidence_score. Set confidence_score to Low.\"\n    }\n  ]\n}",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        832,
+        176
+      ],
+      "id": "340cd9a1-5093-416e-ae55-82f0ca67f834",
+      "name": "Extract with LLM (url only)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "r9JdvXc2Vm48xKot",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1056,
+        -16
+      ],
+      "id": "ee1c54cc-a3bb-4fe0-b0ac-b55dd63938bb",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const llmResponse = $input.first().json;\nconst content = llmResponse.choices[0].message.content;\nconst parsed = JSON.parse(content);\n\nconst validBusinessTypes = [\n  \"Agency\", \"Coaching / Consulting\", \"SaaS / Software\", \"E-commerce\",\n  \"Professional Services\", \"Education / Course\", \"Local / Trade Services\", \"Media / Content\"\n];\nconst validIndustries = [\n  \"Real Estate\", \"Health & Wellness\", \"Legal\", \"Finance & Wealth\",\n  \"Home Services\", \"Marketing & Lead Gen\", \"Food & Hospitality\", \"Fitness\",\n  \"Technology\", \"Education\", \"E-commerce / Retail\", \"Business Operations\"\n];\n\nreturn [{\n  json: {\n    company_name:    parsed.company_name    || \"Unknown\",\n    business_type:   validBusinessTypes.includes(parsed.business_type) ? parsed.business_type : \"Unknown\",\n    industry:        validIndustries.includes(parsed.industry) ? parsed.industry : \"Unknown\",\n    company_summary: parsed.company_summary || \"\",\n    confidence_score: [\"High\",\"Medium\",\"Low\"].includes(parsed.confidence_score) ? parsed.confidence_score : \"Low\",\n    hubspot_id:      $('Extract Member Data').item.json.hubspot_id,\n    enriched_at:     new Date().toISOString(),\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -16
+      ],
+      "id": "ccd43de9-b2d4-4e13-ae28-0e12d63cefc0",
+      "name": "Validate & Structure Output"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "==https://api.hubapi.com/crm/v3/objects/companies/{{$node[\"Validate & Structure Output\"].json[\"hubspot_id\"]}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "={\n  \"properties\": {\n    \"business_type\":   \"{{ $json.business_type }}\",\n    \"industry\":        \"{{ $json.industry }}\",\n    \"company_summary\": \"{{ $json.company_summary }}\",\n    \"confidence_score\":\"{{ $json.confidence_score }}\",\n    \"enriched_at\":     \"{{ $json.enriched_at }}\"\n  }\n}",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1264,
+        224
+      ],
+      "id": "761e1832-7781-496a-9d57-3d421127ab18",
+      "name": "Update HubSpot Company",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "htbJqWqnBUknsASS",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "text": "=✅ New member enriched Company: {{ $json.business_type }} \n {{ $json.industry }} Confidence: {{ $json.confidence_score }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1472,
+        224
+      ],
+      "id": "a3c1204b-425c-4848-ba59-c46876e9ca59",
+      "name": "Notify Ops Team",
+      "webhookId": "477cff90-0446-45b1-92b8-0f9f5efe8807"
+    },
+    {
+      "parameters": {
+        "content": "The placeholder values in the extract member data node should map to real HubSpot webhook fields in production"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        160,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "25a0f446-7a38-4317-827f-95634b8ef5d5",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "New Member Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Member Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Member Data": {
+      "main": [
+        [
+          {
+            "node": "Scrape Website (Firecrawl)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Website (Firecrawl)": {
+      "main": [
+        [
+          {
+            "node": "Scrape Successful?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Successful?": {
+      "main": [
+        [
+          {
+            "node": "Extract with LLM (scraped)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract with LLM (url only)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract with LLM (scraped)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract with LLM (url only)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Validate & Structure Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Structure Output": {
+      "main": [
+        [
+          {
+            "node": "Update HubSpot Company",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update HubSpot Company": {
+      "main": [
+        [
+          {
+            "node": "Notify Ops Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "152a03de-ae9e-4dba-b7b1-00f06b5cd4dd",
+  "meta": {
+    "instanceId": "3ff32b648352566b1777c54b23aac75f923e556e9ebcfdca797e58b40e3df213"
+  },
+  "id": "78Eidoq7SDHgm0cM",
+  "tags": []
+}
