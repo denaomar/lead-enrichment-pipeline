@@ -94,3 +94,5 @@ Total estimated cost to run the full pipeline: **under $0.15**.
 ## Design Decisions
 
 For the full reasoning behind architecture choices, taxonomy design, column selection, and cost optimisation, see [`PIPELINE_DESIGN.md`](PIPELINE_DESIGN.md).
+
+See also: n8n_workflow.json — a mockup of the equivalent workflow built in n8n, showing what this pipeline would look like as a node-based automation with a webhook trigger instead of a Python script.
