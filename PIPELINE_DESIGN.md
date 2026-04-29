@@ -1,15 +1,15 @@
-# Pipeline Design — ACQ Vantage Lead Enrichment
+# Pipeline Design — Lead Enrichment 
 **Author:** Dena Omar
 
 ---
 
 ## 1. Problem Framing
 
-The brief asks for structured company data from 48 website URLs, clean enough to write back to a CRM and use for cohort analysis, targeted outreach, and member composition reporting.
+GTM teams routinely maintain lists of prospect or customer websites, sourced from CRM imports, event registrations, community memberships, or enrichment tools, with little to no structured data attached. Turning those URLs into actionable company intelligence (industry, business type, a reliable one-line summary) is a recurring ops problem that most teams solve manually or not at all.
 
-The core challenge is not technical — scraping and LLM extraction are well-solved. The challenge is **data quality at the output layer**. A pipeline that produces fast results with inconsistent taxonomies, vague summaries, or undocumented failures is worse than useless for analysis: it creates the appearance of clean data while hiding noise.
+The core challenge is not technical — scraping and LLM extraction are well-solved. The challenge is **data quality at the output layer**. A pipeline that produces fast results with inconsistent taxonomies, vague summaries, or undocumented failures is worse than useless for segmentation and outreach: it creates the appearance of clean data while hiding noise.
 
-Every design decision in this pipeline is oriented around one question: *will a CRM analyst be able to trust and act on this output without additional cleaning?*
+Every design decision in this pipeline is oriented around one question: will a revenue ops analyst be able to trust and act on this output without additional cleaning?*
 
 ---
 
@@ -87,7 +87,7 @@ A fixed taxonomy enforces consistency at the point of data creation rather than 
 | Local / Trade Services | Geography-bound service business |
 | Media / Content | Audience monetisation via content |
 
-These eight categories cover the full range of business models found in Vantage's member base (verified $1M+ revenue entrepreneurs) without over-segmenting. They map directly to the outreach strategies Acquisition.com uses: offer structure for agencies differs from course creators, which differs from SaaS.
+These eight categories cover the full range of business models typically found in a high-revenue B2B prospect or customer list without over-segmenting. They map directly to how GTM teams differentiate outreach strategy.
 
 ### Industry taxonomy
 

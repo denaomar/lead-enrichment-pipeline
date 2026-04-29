@@ -1,12 +1,11 @@
 # Lead Enrichment Pipeline
-### ACQ Vantage — Trial Project
 **Author:** Dena Omar
 
 ---
 
 ## What This Does
 
-Takes a CSV of 48 member company websites and enriches each one with structured, CRM-ready company data using a multi-stage scraping pipeline and an LLM extraction layer.
+Takes a CSV of 48 test member company websites and enriches each one with structured, CRM-ready company data using a multi-stage scraping pipeline and an LLM extraction layer.
 
 Each URL produces:
 
@@ -95,3 +94,5 @@ Total estimated cost to run the full pipeline: **under $0.15**.
 ## Design Decisions
 
 For the full reasoning behind architecture choices, taxonomy design, column selection, and cost optimisation, see [`PIPELINE_DESIGN.md`](PIPELINE_DESIGN.md).
+
+See also: n8n_workflow.json — a mockup of the equivalent workflow built in n8n, showing what this pipeline would look like as a node-based automation with a webhook trigger instead of a Python script.
