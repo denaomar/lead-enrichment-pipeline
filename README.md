@@ -1,12 +1,12 @@
 # Lead Enrichment Pipeline
-### ACQ Vantage — Trial Project
+### Mockup Project
 **Author:** Dena Omar
 
 ---
 
 ## What This Does
 
-Takes a CSV of 48 member company websites and enriches each one with structured, CRM-ready company data using a multi-stage scraping pipeline and an LLM extraction layer.
+Takes a CSV of 48 test member company websites and enriches each one with structured, CRM-ready company data using a multi-stage scraping pipeline and an LLM extraction layer.
 
 Each URL produces:
 
